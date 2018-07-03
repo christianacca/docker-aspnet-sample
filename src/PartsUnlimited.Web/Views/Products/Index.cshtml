@@ -1,0 +1,99 @@
+﻿@model IEnumerable<PartsUnlimited.Models.Product>
+
+@{
+    ViewBag.Title = "Index";
+}
+
+<h2>Index</h2>
+
+<p>
+    @Html.ActionLink("Create New", "Create")
+</p>
+<table class="table">
+    <tr>
+        <th>
+            @Html.DisplayNameFor(model => model.Category.Name)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.SkuNumber)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.RecommendationId)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Title)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Price)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.SalePrice)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.ProductArtUrl)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Created)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Description)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.ProductDetails)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Inventory)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.LeadTime)
+        </th>
+        <th></th>
+    </tr>
+
+@foreach (var item in Model) {
+    <tr>
+        <td>
+            @Html.DisplayFor(modelItem => item.Category.Name)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.SkuNumber)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.RecommendationId)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.Title)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.Price)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.SalePrice)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.ProductArtUrl)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.Created)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.Description)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.ProductDetails)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.Inventory)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.LeadTime)
+        </td>
+        <td>
+            @Html.ActionLink("Edit", "Edit", new { id=item.ProductId }) |
+            @Html.ActionLink("Details", "Details", new { id=item.ProductId }) |
+            @Html.ActionLink("Delete", "Delete", new { id=item.ProductId })
+        </td>
+    </tr>
+}
+
+</table>

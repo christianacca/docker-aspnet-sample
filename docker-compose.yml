@@ -1,0 +1,16 @@
+version: '3.4'
+
+services:
+  db:
+    image: microsoft/mssql-server-windows-express
+    environment:
+      - sa_password=This1sthesapassword1
+      - ACCEPT_EULA=Y
+
+  web-app:
+    image: christianacca/aspnetapp-sample:${VERSION:-latest}
+    environment:
+      - sa_password=This1sthesapassword1
+      - DB_SERVER=db
+    depends_on:
+      - db

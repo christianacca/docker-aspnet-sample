@@ -1,0 +1,9 @@
+# escape=`
+FROM aspnetapp-sample:build
+SHELL ["powershell", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
+
+VOLUME C:/results
+
+CMD ["C:/src"]
+ENTRYPOINT ["powershell", "C:/run-tests.ps1"]
+COPY run-tests.ps1 C:/

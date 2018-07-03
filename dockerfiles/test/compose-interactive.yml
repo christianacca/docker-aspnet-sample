@@ -1,0 +1,8 @@
+version: '3.4'
+
+services:
+
+  tests:
+    command: ["C:/host-src"]
+    volumes:
+      - C:/Git/dockerfiles/samples/dotnet/aspnetmvcapp/src:C:/host-src

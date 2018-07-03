@@ -1,0 +1,22 @@
+version: '3.4'
+
+services: 
+
+  db:
+    image: microsoft/mssql-server-windows-express
+    environment:
+      - sa_password=This1sthesapassword1
+      - ACCEPT_EULA=Y
+
+  tests:
+    build: .
+    image: aspnetapp-sample:tests
+    environment: 
+      - sa_password=This1sthesapassword1
+    depends_on: 
+      - db
+    volumes: 
+      - tests-output:C:/results
+
+volumes: 
+  tests-output:

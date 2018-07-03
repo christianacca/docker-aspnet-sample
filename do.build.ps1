@@ -167,7 +167,16 @@ task Publish Build, Login, {
 # Synopsis: Publishes the test results to the CI server
 task PublishTestResults SetTestOutputVars, {
     switch ($env:BH_BuildSystem) {
-        'VSTS' { Write-Host "##vso[task.setvariable variable=TestResultsFilePath]$testResultsXmlPath"; break }
+        'VSTS'
+        {
+            Write-Host "##vso[task.setvariable variable=TestResultsFilePath]$testResultsXmlPath"; break
+        }
+        'AppVeyor'
+        { 
+            (New-Object 'System.Net.WebClient').UploadFile(
+                "https://ci.appveyor.com/api/testresults/nunit/$($env:APPVEYOR_JOB_ID)",
+                $testResultsXmlPath )
+        }
     }
 }
 

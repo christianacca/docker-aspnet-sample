@@ -205,7 +205,7 @@ task SetVersionVars {
 
 # Synopsis: Remove docker containers and volumes created by the tests
 task Teardown {
-    exec { docker-compose @integrationComposeConfig down -v }
+    exec { docker-compose @integrationComposeConfig down }
 }
 
 # Synopsis: Prevent subsequent task execution in cases where tests have failed

@@ -1,8 +1,8 @@
 # ASP.NET MVC Docker Sample
 
-This [sample](Dockerfile) demonstrates how to use ASP.NET MVC and Docker together.
+This sample demonstrates how to use ASP.NET MVC and Docker together.
 
-The sample builds the application in a container based on a custom version of [.NET Framework SDK Docker image](https://hub.docker.com/r/christianacca/dotnet-framework/.
+Unlike the [official sample](https://github.com/Microsoft/dotnet-framework-docker/blob/master/samples/aspnetapp/Dockerfile) this sample *publishes* a *pre-compiled* web application
 
 This sample requires [Docker 17.06](https://docs.docker.com/release-notes/docker-ce) or later of the [Docker client](https://store.docker.com/editions/community/docker-ce-desktop-windows).
 

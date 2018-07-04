@@ -1,5 +1,3 @@
-resources:
-- repo: self
 queue:
   name: Series5-docker
   condition: succeeded()

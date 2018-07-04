@@ -9,6 +9,7 @@ $registryAccount = 'christianacca'
 $repo = "$registryAccount/$imageName"
 $env:BUILD_BASE_IMAGE = 'christianacca/dotnet-framework:4.7.2-sdk'
 $env:RUNTIME_BASE_IMAGE = 'microsoft/aspnet:4.7.2'
+$env:DB_IMAGE_TAG = 'christianacca/mssql-server-windows-express'
 
 $isLatest = ($env:BH_CommitMessage -match '!deploy' -and $ENV:BH_BranchName -eq "master")
 
@@ -214,7 +215,7 @@ task ThrowOnTestFailure {
 
 # Synopsis: Pull the latest base images used by our containers
 task UpdateBaseImages -Before Build -If ($SkipPull -eq $false) {
-    foreach ($baseImage in @($env:BUILD_BASE_IMAGE, $env:RUNTIME_BASE_IMAGE)) {
+    foreach ($baseImage in @($env:BUILD_BASE_IMAGE, $env:RUNTIME_BASE_IMAGE, $env:DB_IMAGE_TAG)) {
         exec { docker pull $baseImage }
     }
 }

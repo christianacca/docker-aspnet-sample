@@ -2,7 +2,7 @@ version: '3.4'
 
 services:
   db:
-    image: christianacca/mssql-server-windows-express
+    image: ${DB_IMAGE_TAG:-christianacca/mssql-server-windows-express}
     environment:
       - sa_password=This1sthesapassword1
       - ACCEPT_EULA=Y

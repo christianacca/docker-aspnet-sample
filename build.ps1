@@ -45,8 +45,7 @@ if (-not(Get-InstalledModule PSDepend -RequiredVersion $psDependVersion -EA Sile
 Import-Module PSDepend -RequiredVersion $psDependVersion
 Invoke-PSDepend -Path "$PSScriptRoot\build.depend.psd1" -Install -Force
 
-$rootPath = Resolve-Path "$PSScriptRoot\..\..\.."
-Set-BuildEnvironment -Path $rootPath -Force -VariableNamePrefix 'BH_' -BuildOutput "$PSScriptRoot\output" -WA SilentlyContinue
+Set-BuildEnvironment -Force -VariableNamePrefix 'BH_' -BuildOutput "$PSScriptRoot\output" -WA SilentlyContinue
 
 Write-Output '  Setting build script properties'
 if ($Credential) {

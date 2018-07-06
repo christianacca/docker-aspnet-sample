@@ -158,7 +158,7 @@ task Publish Build, Login, {
         return
     }
 
-    $repoTags | ForEach-Object {
+    $repoTags | Where-Object { $_ -notlike '*:dev' } | ForEach-Object {
         "  Pushing $_"
         exec { docker push $_ }
     }

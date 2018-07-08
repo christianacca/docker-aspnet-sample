@@ -1,10 +1,12 @@
 resources:
-- repo: self
-queue:
-  name: Series5-docker
-  condition: succeeded()
+  repositories:
+    - repository: mysrc
+      type: github
+      endpoint: Github
+      name: christianacca/docker-aspnet-sample
+queue: Series5-docker
 steps:
-- powershell: . build.ps1 CI 
+- powershell: .\build.ps1 CI
   displayName: CI
   env:
     DockerUsername: $(DockerUsername)

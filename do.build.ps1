@@ -197,7 +197,7 @@ task SetTestOutputVars {
 # Synopsis: Sets script variables with the semantic version of the current checked out git branch
 task SetVersionVars {
     $script:version = Get-Content "$BuildRoot\src\version.txt" -Raw
-    $buildTag = if ($env:BH_BuildSystem -ne 'Unknown') { "$version-build$env:BH_BuildNumber" } else { 'dev' }
+    $buildTag = if ($env:BH_BuildSystem -ne 'Unknown') { "$version-$env:BH_BuildNumber" } else { 'dev' }
     $latestTag = if ($isLatest) { 'latest' }
     $script:tags = @($version, $buildTag, $latestTag) | Where-Object { $_ }
     $script:repoTags = $tags | ForEach-Object { '{0}:{1}' -f $repo, $_ }

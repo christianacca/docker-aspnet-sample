@@ -12,13 +12,16 @@ Docker credentials to login to the 'series5.azurecr.io' registry
 Skip pulling base image(s) before building
 
 .PARAMETER Force
-Force the publish when otherwise it would be skipped?
+Change the behaviour of the Task being run:
+* Publish: publish when otherwise it would be skipped?
+* Up, UpDev: remove any existing containers rather than starting them
+* Down, DownDev: also remove volumes
 
 #>
 
 [cmdletbinding()]
 param (
-    [ValidateSet('Build', 'CI', 'Cleanup', 'Down', 'DownDev', 'EnvironInfo', 'Test', 'Publish', 'OpenTestResult', 'VersionInfo', 'Login', 'Logout', 'Up', 'UpDev')]
+    [ValidateSet('Build', 'CI', 'Cleanup', 'Down', 'DownDev', 'EnvironInfo', 'Help', 'Login', 'Logout', 'OpenTestResult', 'Publish', 'Test', 'VersionInfo', 'Up', 'UpDev')]
     [string[]] $Task = 'Default',
 
     [string] $Configuration = 'Release',
@@ -29,6 +32,9 @@ param (
 
     [switch] $Force
 )
+
+$InformationPreference = 'Continue'; $WarningPreference = 'Continue'
+
 Write-Output "Starting build"
 
 if (-not (Get-PackageProvider | ? Name -eq nuget)) {
@@ -44,6 +50,11 @@ if (-not(Get-InstalledModule PSDepend -RequiredVersion $psDependVersion -EA Sile
 }
 Import-Module PSDepend -RequiredVersion $psDependVersion
 Invoke-PSDepend -Path "$PSScriptRoot\build.depend.psd1" -Install -Force
+
+if ($Task -eq 'Help') {
+    Invoke-Build ?
+    return
+}
 
 Set-BuildEnvironment -Force -VariableNamePrefix 'BH_' -BuildOutput "$PSScriptRoot\output" -WA SilentlyContinue
 

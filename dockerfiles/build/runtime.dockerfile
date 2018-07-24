@@ -1,17 +1,17 @@
 # escape=`
 ARG RUNTIME_BASE_IMAGE=microsoft/aspnet:latest
-FROM aspnetapp-sample:build AS build
+FROM aspnetapp-sample:build AS build-env
 
 ARG VS_CONFIG=Release
 
-RUN msbuild PartsUnlimited.Web/PartsUnlimited.Web.csproj /p:Configuration=%VS_CONFIG% /p:DeployOnBuild=true /p:PublishProfile=DeployLocally
+RUN msbuild PartsUnlimited.Web/PartsUnlimited.Web.csproj /p:Configuration=%VS_CONFIG% /p:DeployOnBuild=true /p:PublishProfile=DeployLocally /verbosity:minimal
 
 FROM ${RUNTIME_BASE_IMAGE} AS runtime
 SHELL ["powershell", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
 
 WORKDIR /inetpub/wwwroot
 
-HEALTHCHECK --interval=10s --start-period=90s `
+HEALTHCHECK --interval=30s --timeout=20s --start-period=90s `
  CMD powershell -command `
     try { `
      $response = iwr http://localhost/ -UseBasicParsing; `
@@ -19,6 +19,7 @@ HEALTHCHECK --interval=10s --start-period=90s `
      else {return 1}; `
     } catch { return 1 }
 
-ENTRYPOINT [ "powershell", "C:/scripts/bootstrap.ps1" ]
-COPY --from=build /src/PartsUnlimited.Web/docker/ C:/scripts/
-COPY --from=build /src/PartsUnlimited.Web/bin/Release/Publish/ ./
+ENTRYPOINT [ "powershell", "/scripts/bootstrap.ps1" ]
+COPY --from=build-env /src/PartsUnlimited.Web/docker/ /scripts/
+
+COPY --from=build-env /src/PartsUnlimited.Web/bin/Release/Publish/ ./

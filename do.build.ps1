@@ -12,13 +12,14 @@ $env:RUNTIME_BASE_IMAGE = 'microsoft/aspnet:4.7.2'
 $env:DB_IMAGE_TAG = 'christianacca/mssql-server-windows-express'
 
 $isLatest = ($env:BH_CommitMessage -match '!deploy' -and $ENV:BH_BranchName -eq "master")
+$branchName = ($env:BH_BranchName -replace '/', '-')
 
-$branchSuffix = ($env:BH_BranchName -replace '/', '-')
-$composeTestProject = "$imageName-$branchSuffix-test"
-$integrationComposeConfig = '-p', $composeTestProject, '-f', "$BuildRoot\dockerfiles\test\docker-compose.yml"
+$composeTestProject = "$imageName-$branchName-test"
+$composeTestPath = "$BuildRoot\dockerfiles\test"
+$integrationComposeConfig = '-p', $composeTestProject, '-f', "$composeTestPath\docker-compose.yml"
 
 Task Default Build
-Task CI Build, ?Test, PublishTestResults, Teardown, ThrowOnTestFailure, Publish
+Task CI Build, ?Test, PublishTestResults, TeardownTests, ThrowOnTestFailure, Publish
 Task Test Build, IntegrationTest
 
 
@@ -27,10 +28,12 @@ function ComposeUp {
 
     $VerbosePreference = 'Continue'
 
-    exec { docker-compose -f $BuildRoot\docker-compose.yml -p $Name up -d }
+    $recreateContainers = if ($Force) { '--force-recreate' }
+    exec { docker-compose -f $BuildRoot\docker-compose.yml -p $Name up -d $recreateContainers }
 
     $containerName = '{0}_web-app_1' -f $Name
-    Wait-DockerContainerStatus $containerName -Status healthy -Timeout 60 -Interval 10 -Verbose 
+    # note: we are having to wait 2 mins as the web app creates the db on first startup
+    Wait-DockerContainerStatus $containerName -Status healthy -Timeout 120 -Interval 10 -Verbose 
     $ip = (Get-DockerContainerIP $containerName).IPAddress
     $url = "http:\\$ip"
     Write-Information "Opening '$url'"
@@ -39,7 +42,14 @@ function ComposeUp {
 
 function ComposeDown {
     param([string] $Name)
-    exec { docker-compose -p $Name -f $BuildRoot\docker-compose.yml down }
+    $removeVolume = if ($Force) { '-v' }
+    exec { docker-compose -p $Name -f $BuildRoot\docker-compose.yml down $removeVolume }
+}
+
+function RunTestsInDocker {
+    param([string[]] $Configuration)
+    exec { docker-compose @Configuration down -v --remove-orphans }
+    exec { docker-compose @Configuration up --build --abort-on-container-exit --exit-code-from tests }
 }
 
 Enter-Build {
@@ -54,23 +64,18 @@ task Build SetVersionVars, {
     # set docker build-args
     $env:VS_CONFIG = $Configuration
 
-    $composeFile = "$BuildRoot\dockerfiles\build\docker-compose.yml"
-    if ($BuildTask -in 'Test') {
-        exec { docker-compose -f $composeFile build 'build-env' }
-    } else {
+    exec { docker-compose -f $BuildRoot\dockerfiles\build\docker-compose.yml build }
+
+    if ($BuildTask -notlike '*Test') {
         # set docker build-args
         $env:IMAGE_TAG = $repoTags | Select-Object -First 1
 
-        exec { docker-compose -f $composeFile build }
-        
-        $repoTags | Select-Object -Skip 1 | ForEach-Object {
-            exec { docker tag $env:IMAGE_TAG $_ }
-        }
+        exec { docker-compose -f $BuildRoot\dockerfiles\build\compose-runtime.yml build }
     }
 }
 
 # Synopsis: Removes docker artefacts created by the build
-task Cleanup {
+task Cleanup TeardownTests, {
     exec { docker image prune -f }
     $imageId = @(exec { docker image ls -f reference=$repo -q })
     $imageId += exec { docker image ls -f reference=$imageName -q }
@@ -87,10 +92,12 @@ task Cleanup {
     }
 }
 
+# Synopsis: Calls docker-compose down to stop containers, removes containers, networks, volumes, and images created by Up
 task Down {
     ComposeDown -Name $imageName
 }
 
+# Synopsis: Calls docker-compose down to stop containers, removes containers, networks, volumes, and images created by UpDev
 task DownDev {
     try {
         $env:VERSION = 'dev'
@@ -120,10 +127,7 @@ task EnvironInfo {
 
 # Synopsis: Run the integration tests against the containerized build output
 task IntegrationTest {
-    exec { 
-        docker-compose @integrationComposeConfig up --build --force-recreate `
-            --abort-on-container-exit --exit-code-from tests 
-    }
+    RunTestsInDocker $integrationComposeConfig
 }
 
 # Synopsis: Login to the docker registry that stores the docker image produced by the Build task
@@ -147,20 +151,26 @@ task OpenTestResult SetTestOutputVars, {
 }
 
 # Synopsis: Publishes the docker image to the registry
-task Publish Build, Login, {
-
-    # Gate deployment
-    if (!$isLatest -and !$Force)
-    {
-        "Skipping deployment: To deploy, ensure that...`n" + 
-        "`t* You are committing to the master branch (Current: $ENV:BH_BranchName) `n" + 
-        "`t* Your commit message includes !deploy (Current: $ENV:BH_CommitMessage)"
-        return
+task Publish @{
+    If = {
+        # Gate deployment
+        $skip = !$isLatest -and !$Force
+        if ($skip) {
+            Write-Information "Skipping deployment: To deploy, ensure that...`n" + 
+            Write-Information "`t* You are committing to the master branch (Current: $ENV:BH_BranchName) `n" + 
+            Write-Information "`t* Your commit message includes !deploy (Current: $ENV:BH_CommitMessage)"
+        }
+        !$skip
     }
-
-    $repoTags | Where-Object { $_ -notlike '*:dev' } | ForEach-Object {
-        "  Pushing $_"
-        exec { docker push $_ }
+    Jobs = 'Build', 'Login', {
+        $repoTags | Select-Object -Skip 1 | ForEach-Object {
+            exec { docker tag $env:IMAGE_TAG $_ }
+        }
+    
+        $repoTags | Where-Object { $_ -notlike '*:dev' } | ForEach-Object {
+            "  Pushing $_"
+            exec { docker push $_ }
+        }
     }
 }
 
@@ -169,13 +179,21 @@ task PublishTestResults SetTestOutputVars, {
     switch ($env:BH_BuildSystem) {
         'VSTS'
         {
-            Write-Host "##vso[task.setvariable variable=TestResultsFilePath]$testResultsXmlPath"; break
+            Write-Host "##vso[task.setvariable variable=TestResultsSearchPath;isOutput=true;]$testOutputPath"
+            break
         }
         'AppVeyor'
         { 
-            (New-Object 'System.Net.WebClient').UploadFile(
-                "https://ci.appveyor.com/api/testresults/nunit/$($env:APPVEYOR_JOB_ID)",
-                $testResultsXmlPath )
+            $webClient = New-Object 'System.Net.WebClient'
+            try {
+                $webClient.UploadFile(
+                    "https://ci.appveyor.com/api/testresults/nunit/$($env:APPVEYOR_JOB_ID)",
+                    $testResultsXmlPath )
+            }
+            finally {
+                $webClient.Dispose()    
+            }
+            break
         }
     }
 }
@@ -192,25 +210,48 @@ task SetTestOutputVars {
     $script:testOutputPath = (Get-DockerVolume -ContainerName "$($composeTestProject)_tests_1").Mountpoint
     $script:testResultsHtmlPath = Join-Path $testOutputPath 'TestResult.html'
     $script:testResultsXmlPath = Join-Path $testOutputPath 'TestResult.xml'
+
+    @($testResultsHtmlPath, $testResultsXmlPath) | ForEach-Object {
+        if (Test-Path $_) {
+            Write-Information "Test results file created: $_"
+        } else {
+            Write-Warning "Missing test results file: $_"
+        }
+    }
 }
 
 # Synopsis: Sets script variables with the semantic version of the current checked out git branch
 task SetVersionVars {
     $script:version = Get-Content "$BuildRoot\src\version.txt" -Raw
-    $buildTag = if ($env:BH_BuildSystem -ne 'Unknown') { "$version-$env:BH_BuildNumber" } else { 'dev' }
-    $latestTag = if ($isLatest) { 'latest' }
-    $script:tags = @($version, $buildTag, $latestTag) | Where-Object { $_ }
+    $script:versionTags = & {
+        $version
+        if ($env:BH_BuildSystem -ne 'Unknown') { "$version-$env:BH_BuildNumber" }
+    }
+    $script:tags = & {
+        if ($env:BH_BuildSystem -eq 'Unknown') { 'dev' }
+        $branchName
+        $versionTags
+        if ($isLatest) { 'latest' }
+    }
     $script:repoTags = $tags | ForEach-Object { '{0}:{1}' -f $repo, $_ }
+    $script:versionRepoTags = $versionTags | ForEach-Object { '{0}:{1}' -f $repo, $_ }
 }
 
 # Synopsis: Remove docker containers and volumes created by the tests
-task Teardown {
+task TeardownTests {
     exec { docker-compose @integrationComposeConfig down }
 }
 
 # Synopsis: Prevent subsequent task execution in cases where tests have failed
 task ThrowOnTestFailure {
     assert(-not(error IntegrationTest)) "Testing quality gate failed"
+}
+
+# Synopsis: Remove version specific docker image tags so that the server does not keep docker images for previous builds
+task UntagVersion -After Publish {
+    $versionRepoTags | ForEach-Object {
+        exec { docker image rm $_ }
+    }
 }
 
 # Synopsis: Pull the latest base images used by our containers
@@ -220,10 +261,12 @@ task UpdateBaseImages -Before Build -If ($SkipPull -eq $false) {
     }
 }
 
+# Synopsis: Calls docker-compose up to start the 'latest' (ie current production version) of app. Once up, opens a browser to the SPA home page
 task Up {
     ComposeUp -Name $imageName
 }
 
+# Synopsis: Calls docker-compose up to start a dev build of app. Once up, opens a browser to the SPA home page
 task UpDev {
     try {
         $env:VERSION = 'dev'

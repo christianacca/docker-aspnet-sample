@@ -1,0 +1,12 @@
+version: '3.4'
+
+services:
+
+  runtime-env:
+    image: ${IMAGE_TAG:-christianacca/aspnetapp-sample}
+    build:
+      context: .
+      dockerfile: runtime.dockerfile
+      args:
+        - VS_CONFIG
+        - RUNTIME_BASE_IMAGE

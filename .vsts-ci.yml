@@ -5,9 +5,12 @@ resources:
       endpoint: Github
       name: christianacca/docker-aspnet-sample
 queue: Series5-docker
+name: $(Date:yyyyMMdd).$(BuildID)
+
 steps:
 - powershell: .\build.ps1 CI
   displayName: CI
+  name: CI
   env:
     DockerUsername: $(DockerUsername)
     DockerPassword: $(DockerPassword)
@@ -16,6 +19,7 @@ steps:
   displayName: Publish Test Results
   inputs:
     testRunner: NUnit
-    testResultsFiles: '$(TestResultsFilePath)'
+    testResultsFiles: '**\Test*.xml'
+    searchFolder: '$(CI.TestResultsSearchPath)'
+    mergeTestResults: true
   condition: succeededOrFailed()
-

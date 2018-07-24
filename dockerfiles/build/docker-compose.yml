@@ -3,22 +3,10 @@ version: '3.4'
 services:
 
   build-env:
-    
+    image: aspnetapp-sample:build
     build:
       context: ../../src
       dockerfile: ../dockerfiles/build/build.dockerfile
       args:
         - VS_CONFIG
         - BUILD_BASE_IMAGE
-    image: aspnetapp-sample:build
-
-  runtime-env:
-    build:
-      context: .
-      dockerfile: runtime.dockerfile
-      args:
-        - VS_CONFIG
-        - RUNTIME_BASE_IMAGE
-    image: ${IMAGE_TAG:-christianacca/aspnetapp-sample}
-    depends_on: 
-      - build-env

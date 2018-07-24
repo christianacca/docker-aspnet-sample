@@ -1,6 +1,6 @@
 @{ 
     PSDependOptions  = @{ 
-        Target    = '$DependencyPath/tools/'
+        Target    = '$DependencyPath/_build-cache/'
         AddToPath = $true
     }
     BuildHelpers     = '1.1.0'

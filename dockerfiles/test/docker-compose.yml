@@ -9,8 +9,8 @@ services:
       - ACCEPT_EULA=Y
 
   tests:
-    build: .
     image: aspnetapp-sample:tests
+    build: .
     environment: 
       - sa_password=This1sthesapassword1
     depends_on: 

@@ -7,7 +7,7 @@ param(
 $imageName = 'aspnetapp-sample'
 $registryAccount = 'christianacca'
 $repo = "$registryAccount/$imageName"
-$env:BUILD_BASE_IMAGE = 'christianacca/dotnet-framework:4.7.2-sdk'
+$env:BUILD_BASE_IMAGE = 'microsoft/dotnet-framework:4.7.2-sdk'
 $env:RUNTIME_BASE_IMAGE = 'microsoft/aspnet:4.7.2'
 $env:DB_IMAGE_TAG = 'christianacca/mssql-server-windows-express'
 

@@ -1,5 +1,5 @@
 # escape=`
-ARG BUILD_BASE_IMAGE=christianacca/dotnet-framework:sdk
+ARG BUILD_BASE_IMAGE=microsoft/dotnet-framework:sdk
 FROM ${BUILD_BASE_IMAGE} AS build-env
 SHELL ["cmd", "/S", "/C"]
 

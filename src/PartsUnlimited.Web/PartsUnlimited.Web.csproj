@@ -243,8 +243,8 @@
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
-    <!-- Note: TargetFrameworkSDKToolsDirectory is not set reliably to 'NETFX 4.7.1 Tools' on all machines, therefore explicitly set it here -->
-    <TargetFrameworkSDKToolsDirectory>C:\Program Files (x86)\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.7.1 Tools\</TargetFrameworkSDKToolsDirectory>
+    <!-- Note: TargetFrameworkSDKToolsDirectory is not set reliably to 'NETFX 4.7.2 Tools' on all machines, therefore explicitly set it here -->
+    <TargetFrameworkSDKToolsDirectory>C:\Program Files (x86)\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.7.2 Tools\</TargetFrameworkSDKToolsDirectory>
   </PropertyGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <Import Project="$(VSToolsPath)\WebApplications\Microsoft.WebApplication.targets" Condition="'$(VSToolsPath)' != ''" />

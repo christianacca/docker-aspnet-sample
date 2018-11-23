@@ -5,8 +5,11 @@ services:
   build-env:
     image: aspnetapp-sample:build
     build:
-      context: ../../src
-      dockerfile: ../dockerfiles/build/build.dockerfile
+      # relative paths currently broken :-( track: https://github.com/docker/for-win/issues/2918
+      # context: ../../src
+      # dockerfile: ../dockerfiles/build/build.dockerfile
+      context: C:\Git\docker-aspnet-sample\src
+      dockerfile: C:\Git\docker-aspnet-sample\dockerfiles\build\build.dockerfile
       args:
         - VS_CONFIG
         - BUILD_BASE_IMAGE

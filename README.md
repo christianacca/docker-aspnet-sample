@@ -16,7 +16,7 @@ You can quickly run a container with a pre-built [sample ASP.NET Docker image](h
 3. In the same powershell prompt run: `docker-compose -p aspnet-sample up -d`
 
 To browse to the home page of the web app now running in a container:
-1. Get the IP address of the container `docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' aspnet-sample_web-app_1`
+1. Get the IP address of the container `docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' (docker ps -f name=aspnet-sample_web-app_1 -q)`
 2. Open a browser and navigate to the IP address
 
 To cleanup:

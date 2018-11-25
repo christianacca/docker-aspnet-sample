@@ -4,7 +4,7 @@
         AddToPath = $true
     }
     BuildHelpers     = '1.1.0'
-    DockerHelpers    = '0.1.2'
+    DockerHelpers    = '0.1.3'
     InvokeBuild      = '5.4.1'
     NuGet = @{
         DependencyType = 'FileDownload'

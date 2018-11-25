@@ -31,7 +31,7 @@ function ComposeUp {
     $recreateContainers = if ($Force) { '--force-recreate' }
     exec { docker-compose -f $BuildRoot\docker-compose.yml -p $Name up -d $recreateContainers }
 
-    $containerName = '{0}_web-app_1' -f $Name
+    $containerName = '{0}_web-app_1*' -f $Name
     # note: we are having to wait 2 mins as the web app creates the db on first startup
     Wait-DockerContainerStatus $containerName -Status healthy -Timeout 120 -Interval 10 -Verbose 
     $ip = (Get-DockerContainerIP $containerName).IPAddress
